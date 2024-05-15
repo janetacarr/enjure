@@ -50,42 +50,38 @@
                  next-node (get (:children prefixtree) next-node-k)]
              (if-not next-node
                ;; TODO: pluggable coercion ???
-               ;; con
                (let [edges (:children prefixtree)
-                     pf (peek (filterv #(string/starts-with? % ":") (keys edges)))
+                     pf (get (filterv #(string/includes? % ":") (keys edges)) 0)
+                     paths (set (string/split pf #"/"))
                      next-node (get edges pf)
-                     param (-> (subs s elements-found)
-                               (string/split #"/")
-                               (get 0))]
+
+                     param-val (some->> (string/split (subs s elements-found) #"/")
+                                        (filterv (fn [search-path]
+                                                   (not (some paths (list search-path))))))
+
+                     param-name (some->> (string/split pf #"/")
+                                         (filterv #(string/includes? % ":")))
+
+                     params-for-prefix (->> param-val
+                                            (mapv #(hash-map (keyword (subs %1 1)) %2) param-name)
+                                            (apply merge path-params)) ;; {:user-id "5317"}
+                     pv (set (vals params-for-prefix))
+
+                     last-param (some->> (string/split (subs s elements-found) #"/")
+                                         (filterv #(some pv (list %)))
+                                         (peek))
+
+                     found (+ (count last-param)
+                              (string/last-index-of (subs s elements-found)
+                                                    last-param))]
                  (if next-node
                    (search next-node
                            s
-                           (+ elements-found (count param))
-                           (assoc path-params (keyword (subs pf 1)) param))
+                           (+ elements-found found)
+                           params-for-prefix)
                    (when-not (emptyv? next-nodes)
                      (recur (pop next-nodes)))))
                (search next-node s (+ elements-found (count next-node-k)) path-params)))))))))
-
-(def testtree
-  (->prefixtree
-   {:get (fn [req] {:status 200
-                    :body "root"})}
-   (->prefix "/user"
-             (->prefixtree
-              {:get (fn [req] {:status 200 :body "user"})}
-              (->prefix "s"
-                        (->prefixtree
-                         {:get (fn [req] {:status 200
-                                          :body "users"})}
-                         (->prefix "/:user-id"
-                                   (->prefixtree
-                                    {:get (fn [req] {:status 200
-                                                     :body "user-id"})}
-                                    (->prefix "/settings"
-                                              (->prefixtree
-                                               {:get (fn [req] {:status 200
-                                                                :body "settings"})}
-                                               nil))))))))))
 
 (defn longest-prefix
   [& strs]
@@ -138,11 +134,13 @@
                                   (when (= suffix lcp)
                                     data)
                                   (merge
-                                   (->prefix
-                                    (remove-prefix prefix lcp)
-                                    (->prefixtree
-                                     (-> prefixtree :children (get prefix) :data)
-                                     (-> prefixtree :children (get prefix) :children)))
+                                   (let [new-prefix (remove-prefix prefix lcp)]
+                                     (when-not (empty? new-prefix)
+                                       (->prefix
+                                        new-prefix
+                                        (->prefixtree
+                                         (-> prefixtree :children (get prefix) :data)
+                                         (-> prefixtree :children (get prefix) :children)))))
                                    (when (not= suffix lcp)
                                      (->prefix
                                       (remove-prefix suffix lcp)
@@ -166,34 +164,3 @@
   (let [{:keys [get put post delete]} data
         f (or get put post delete)]
     (f req)))
-
-(def long-tree (-> testtree
-                   (insert "/owners" {:get (fn [req] {:status 200 :body "owners"})})))
-(def owlers-tree (insert long-tree "/owlers" {:get (fn [req] {:status 200 :body "owlers"})}))
-
-(def owners-tree (insert owlers-tree "/users/:user-id/owner" {:get (fn [req] {:status 200 :body "id/owner"})}))
-
-(def root (tree-root))
-
-(def users (-> root
-               (insert "/users" {:get (fn [req] {:status 200 :body "user"})})))
-
-(def user (insert users "/user" {:get (fn [req] {:status 200 :body "user"})}))
-
-(def user-id (insert user "/users/:user-id" {:get (fn [req] {:status 200 :body "user-id"})}))
-
-(def owners2 (insert user-id "/users/:user-id/owner" {:get (fn [req] {:status 200 :body "id/owner"})}))
-
-(def admin (insert user-id "/users/admin" {:get (fn [req] {:status 200 :body "static admin"})}))
-;; (clojure.pprint/pprint owners-tree)
-
-;; ((:get (search owners-tree "/owners")) {})
-;; (search long-tree "/7531")
-(def router (-> root
-                (insert "/owners" {:get (fn [req] {:status 200 :body "owners"})})
-                (insert "/owlers" {:get (fn [req] {:status 200 :body "owlers"})})
-                (insert "/users/:user-id/owner" {:get (fn [req] {:status 200 :body "id/owner"})})
-                ;;(insert "/users/settings" {:get (fn [req] (fn [req] {:body "users/settings"}))})
-                (insert "/user" {:get (fn [req] {:status 200 :body "user"})})
-                (insert "/users/:user-id" {:get (fn [req] {:status 200 :body "user-id"})})
-                (insert "/users" {:get (fn [req] {:status 200 :body "user"})})))
