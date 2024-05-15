@@ -3,6 +3,37 @@
             [enjure.router.internal.radix-tree-data :refer [test-data]]
             [clojure.test :refer [deftest is testing run-tests]]))
 
+(comment
+  (def long-tree (-> testtree
+                     (insert "/owners" {:get (fn [req] {:status 200 :body "owners"})})))
+  (def owlers-tree (insert long-tree "/owlers" {:get (fn [req] {:status 200 :body "owlers"})}))
+
+  (def owners-tree (insert owlers-tree "/users/:user-id/owner" {:get (fn [req] {:status 200 :body "id/owner"})}))
+
+  (def root (tree-root))
+
+  (def users (-> root
+                 (insert "/users" {:get (fn [req] {:status 200 :body "user"})})))
+
+  (def user (insert users "/user" {:get (fn [req] {:status 200 :body "user"})}))
+
+  (def user-id (insert user "/users/:user-id" {:get (fn [req] {:status 200 :body "user-id"})}))
+
+  (def owners2 (insert user-id "/users/:user-id/owner" {:get (fn [req] {:status 200 :body "id/owner"})}))
+
+  (def admin (insert user-id "/users/admin" {:get (fn [req] {:status 200 :body "static admin"})}))
+
+  ;; ((:get (search owners-tree "/owners")) {})
+  ;; (search long-tree "/7531")
+  (def router (-> root
+                  (insert "/owners" {:get (fn [req] {:status 200 :body "owners"})})
+                  (insert "/owlers" {:get (fn [req] {:status 200 :body "owlers"})})
+                  (insert "/users/:user-id/owner" {:get (fn [req] {:status 200 :body "id/owner"})})
+                  ;;(insert "/users/settings" {:get (fn [req] (fn [req] {:body "users/settings"}))})
+                  (insert "/user" {:get (fn [req] {:status 200 :body "user"})})
+                  (insert "/users/:user-id" {:get (fn [req] {:status 200 :body "user-id"})})
+                  (insert "/users" {:get (fn [req] {:status 200 :body "user"})}))))
+
 (defn insert-all
   [prefixtree routes]
   (try
@@ -50,5 +81,8 @@
                                          (not= route "/repos/:owner/:repo/statuses/:ref"))
                                        test-data)))
 
-#_(insert large-router "/repos/:owner/:repo/statuses/:ref" {:post (fn [req] {:status 201 :body "Status updated successfully."})})
+(def large-router (insert large-router
+                          "/repos/:owner/:repo/statuses/:ref"
+                          {:post (fn [req]
+                                   {:status 201 :body "Status updated successfully."})}))
 (run-tests)
