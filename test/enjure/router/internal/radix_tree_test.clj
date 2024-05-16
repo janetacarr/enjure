@@ -3,37 +3,6 @@
             [enjure.router.internal.radix-tree-data :refer [test-data]]
             [clojure.test :refer [deftest is testing run-tests]]))
 
-(comment
-  (def long-tree (-> testtree
-                     (insert "/owners" {:get (fn [req] {:status 200 :body "owners"})})))
-  (def owlers-tree (insert long-tree "/owlers" {:get (fn [req] {:status 200 :body "owlers"})}))
-
-  (def owners-tree (insert owlers-tree "/users/:user-id/owner" {:get (fn [req] {:status 200 :body "id/owner"})}))
-
-  (def root (tree-root))
-
-  (def users (-> root
-                 (insert "/users" {:get (fn [req] {:status 200 :body "user"})})))
-
-  (def user (insert users "/user" {:get (fn [req] {:status 200 :body "user"})}))
-
-  (def user-id (insert user "/users/:user-id" {:get (fn [req] {:status 200 :body "user-id"})}))
-
-  (def owners2 (insert user-id "/users/:user-id/owner" {:get (fn [req] {:status 200 :body "id/owner"})}))
-
-  (def admin (insert user-id "/users/admin" {:get (fn [req] {:status 200 :body "static admin"})}))
-
-  ;; ((:get (search owners-tree "/owners")) {})
-  ;; (search long-tree "/7531")
-  (def router (-> root
-                  (insert "/owners" {:get (fn [req] {:status 200 :body "owners"})})
-                  (insert "/owlers" {:get (fn [req] {:status 200 :body "owlers"})})
-                  (insert "/users/:user-id/owner" {:get (fn [req] {:status 200 :body "id/owner"})})
-                  ;;(insert "/users/settings" {:get (fn [req] (fn [req] {:body "users/settings"}))})
-                  (insert "/user" {:get (fn [req] {:status 200 :body "user"})})
-                  (insert "/users/:user-id" {:get (fn [req] {:status 200 :body "user-id"})})
-                  (insert "/users" {:get (fn [req] {:status 200 :body "user"})}))))
-
 (defn insert-all
   [prefixtree routes]
   (try
@@ -76,13 +45,108 @@
       (is (= (:path-params (search router "/users/5315")) {:user-id "5315"}))
       (is (= (found-route (search router "/users")) {:status 200 :body "user"})))))
 
-(def large-router (insert-all (tree-root)
-                              (filterv (fn [[route data]]
-                                         (not= route "/repos/:owner/:repo/statuses/:ref"))
-                                       test-data)))
+(defn replace-path-params
+  "Replaces URI path parameters with values from the map."
+  [uri params]
+  (clojure.string/replace uri #":([\w-]+)" #(get params (keyword (second %)))))
 
-(def large-router (insert large-router
-                          "/repos/:owner/:repo/statuses/:ref"
-                          {:post (fn [req]
-                                   {:status 201 :body "Status updated successfully."})}))
-(run-tests)
+(deftest large-router-test
+  (testing "a complex router structure"
+    (let [large-router (insert-all (tree-root) test-data)
+          {get-handler :get
+           post-handler :post
+           put-handler :put
+           delete-handler :delete
+           path-params :path-params} (search large-router "/repos/janetacarr/enjure/statuses/135")
+          path-params (select-keys path-params [:owner :repo :ref])]
+      (is (= (post-handler {})
+             {:status 201 :body "Status updated successfully."}))
+      (is (= (get-handler {})
+             {:status 200 :body "Statuses fetched successfully."}))
+      (is (= path-params
+             {:owner "janetacarr" :repo "enjure" :ref "135"})))))
+
+(def ^:dynamic *debug-tests* false)
+(defn- handle
+  [k m]
+  (when-let [f (get m k)]
+    (when *debug-tests*
+      (println (f {})))
+    (f {})))
+
+#_(defn- debug
+    [uri data large-router uri]
+    (println)
+    (println uri)
+    (println data " <> " (search large-router uri))
+    (println))
+
+(deftest all-routes-test
+  (testing "all the routes"
+    (let [large-router (insert-all (tree-root) test-data)
+          params {:id "123"
+                  :user "janedoe"
+                  :client_id "client123"
+                  :access_token "token123456"
+                  :owner "ownername"
+                  :repository "enjure"
+                  :repo "repository"
+                  :org "orgname"
+                  :assignee "assignee123"
+                  :number "42"
+                  :sha "1a2b3c4d"
+                  :name "name123"
+                  :branch "main"
+                  :ref "main" ;;"refs/heads/main" ;; NOTE: Should (sub-)paths in params be allowed?
+                  :state "open"
+                  :keyword "search"
+                  :email "email@example.com"
+                  :target_user "targetuser123"}]
+      (doseq [[route data] test-data]
+        (let [uri (replace-path-params route params)
+              {:keys [path-params]} (search large-router uri)
+              params-decl (->> (clojure.string/split route #"/")
+                               (filterv #(clojure.string/starts-with? % ":"))
+                               (mapv #(keyword (subs % 1))))]
+          (is (= (handle :get data) (handle :get (search large-router uri))))
+          (is (= (handle :put data)) (handle :put (search large-router uri)))
+          (is (= (handle :post data)) (handle :post (search large-router uri)))
+          (is (= (handle :delete data)) (handle :delete (search large-router uri)))
+          (is (= (select-keys params params-decl) (select-keys path-params params-decl))))))))
+
+#_(run-tests)
+
+#_(let [large-router (insert-all (tree-root) test-data)
+        params {:id "123"
+                :user "janedoe"
+                :client_id "client123"
+                :access_token "token123456"
+                :owner "ownername"
+                :repository "enjure"
+                :repo "repository"
+                :org "orgname"
+                :assignee "assignee123"
+                :number "42"
+                :sha "1a2b3c4d"
+                :name "name123"
+                :branch "main"
+                :ref "main" ;;"refs/heads/main" ;; NOTE: Should (sub-)paths in params be allowed?
+                :state "open"
+                :keyword "search"
+                :email "email@example.com"
+                :target_user "targetuser123"}
+        test-data (mapv (fn [[route data]]
+                          (vector (replace-path-params route params) data))
+                        test-data)]
+    (bench (mapv (fn [[uri data]]
+                   (let [{get-handler :get
+                          post-handler :post
+                          put-handler :put
+                          delete-handler :delete
+                          path-params :path-params} (search large-router uri)]
+                     (cond
+                       get-handler (get-handler {})
+                       put-handler (put-handler {})
+                       post-handler (post-handler {})
+                       delete-handler (delete-handler {}))))
+                 test-data)))

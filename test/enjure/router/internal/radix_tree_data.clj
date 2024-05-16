@@ -48,9 +48,7 @@
    ["/user/starred/:owner/:repo" {:delete (fn [req] {:status 204 :body "Repository unstarred successfully."})}]
    ["/repos/:owner/:repo/subscribers" {:get (fn [req] {:status 200 :body "Subscribers fetched successfully."})}]
    ["/users/:user/subscriptions" {:get (fn [req] {:status 200 :body "User subscriptions fetched successfully."})}]
-   ["/user/subscriptions" {:get (
-
-                                 fn [req] {:status 200 :body "User subscriptions fetched successfully."})}]
+   ["/user/subscriptions" {:get (fn [req] {:status 200 :body "User subscriptions fetched successfully."})}]
    ["/repos/:owner/:repo/subscription" {:get (fn [req] {:status 200 :body "Repository subscription details fetched successfully."})}]
    ["/repos/:owner/:repo/subscription" {:put (fn [req] {:status 204 :body "Subscription updated successfully."})}]
    ["/repos/:owner/:repo/subscription" {:delete (fn [req] {:status 204 :body "Subscription deleted successfully."})}]
@@ -127,9 +125,7 @@
    ["/orgs/:org/members/:user" {:get (fn [req] {:status 200 :body "Organization member details fetched successfully."})}]
    ["/orgs/:org/members/:user" {:delete (fn [req] {:status 204 :body "Member removed from organization successfully."})}]
    ["/orgs/:org/public_members" {:get (fn [req] {:status 200 :body "Public members of the organization fetched successfully."})}]
-   ["/orgs/:org/public_members/:user" {:get (fn [req] {:status 200 :body "
-
-Public member details fetched successfully."})}]
+   ["/orgs/:org/public_members/:user" {:get (fn [req] {:status 200 :body "Public member details fetched successfully."})}]
    ["/orgs/:org/public_members/:user" {:put (fn [req] {:status 204 :body "Member made public in organization successfully."})}]
    ["/orgs/:org/public_members/:user" {:delete (fn [req] {:status 204 :body "Public status of member removed successfully."})}]
    ["/orgs/:org/teams" {:get (fn [req] {:status 200 :body "Teams fetched successfully."})}]
@@ -166,9 +162,7 @@ Public member details fetched successfully."})}]
    ["/orgs/:org/repos" {:post (fn [req] {:status 201 :body "Organization repository created successfully."})}]
    ["/repos/:owner/:repo" {:get (fn [req] {:status 200 :body "Repository details fetched successfully."})}]
    ["/repos/:owner/:repo/contributors" {:get (fn [req] {:status 200 :body "Repository contributors fetched successfully."})}]
-   ["/repos/:owner/:repo/languages" {:get (fn [req
-
-                                               ] {:status 200 :body "Repository languages fetched successfully."})}]
+   ["/repos/:owner/:repo/languages" {:get (fn [req] {:status 200 :body "Repository languages fetched successfully."})}]
    ["/repos/:owner/:repo/teams" {:get (fn [req] {:status 200 :body "Repository teams fetched successfully."})}]
    ["/repos/:owner/:repo/tags" {:get (fn [req] {:status 200 :body "Repository tags fetched successfully."})}]
    ["/repos/:owner/:repo/branches" {:get (fn [req] {:status 200 :body "Repository branches fetched successfully."})}]
@@ -240,9 +234,7 @@ Public member details fetched successfully."})}]
    ["/user/following/:user" {:get (fn [req] {:status 200 :body "Following user details fetched successfully."})}]
    ["/users/:user/following/:target_user" {:get (fn [req] {:status 200 :body "Following target user details fetched successfully."})}]
    ["/user/following/:user" {:put (fn [req] {:status 204 :body "User followed successfully."})}]
-   ["/
-
-user/following/:user" {:delete (fn [req] {:status 204 :body "User unfollowed successfully."})}]
+   ["/user/following/:user" {:delete (fn [req] {:status 204 :body "User unfollowed successfully."})}]
    ["/users/:user/keys" {:get (fn [req] {:status 200 :body "User keys fetched successfully."})}]
    ["/user/keys" {:get (fn [req] {:status 200 :body "User keys fetched successfully."})}]
    ["/user/keys/:id" {:get (fn [req] {:status 200 :body "User key details fetched successfully."})}]
