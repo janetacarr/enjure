@@ -1,0 +1,1 @@
+insert into {{table-name}} ( {% for cn in column-names %} {% if forloop.last %} {{cn}} {% else %} {{cn}}, {% endif %} {% endfor %} ) values ({% for cn in column-names %} {% if forloop.last %} ? {% else %} ?,{% endif %} {% endfor %});

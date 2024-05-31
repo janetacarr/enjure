@@ -11,5 +11,18 @@
      ~argsv
      ~@body))
 
+(defmacro defchange
+  "Create a PUT resource on `uri`
+  named `name`"
+  [name uri argsv & body]
+  `(defresource ~name :put ~uri
+     ~argsv
+     ~@body))
 
-(defaction signin "/signin" [req] {:status 200})
+(defmacro defremoval
+  "Create a DELETE resource on `uri`
+  name `name`"
+  [name uri argsv & body]
+  `(defresource ~name :delete ~uri
+     ~argsv
+     ~@body))

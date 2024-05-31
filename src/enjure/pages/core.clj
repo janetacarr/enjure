@@ -1,5 +1,6 @@
 (ns enjure.pages.core
-  (:require [clojure.tools.logging :as log]))
+  (:require [clojure.tools.logging :as log]
+            [enjure.router.internal.radix-tree :as tree]))
 
 (defn internal-server-error
   []
@@ -25,10 +26,10 @@
              (internal-server-error))))
        (alter-var-root #'enjure.router.core/*routing-table*
                        (fn [~'_]
-                         (let [k# (enjure.router.core/->key ~uri :get)]
-                           (assoc enjure.router.core/*routing-table*
-                                  k#
-                                  ~name))))
+                         (let [existing# (tree/search enjure.router.core/*routing-table* ~uri)]
+                           (tree/insert enjure.router.core/*routing-table*
+                                        ~uri
+                                        (merge existing# {:get ~name})))))
        (alter-var-root #'enjure.router.core/*reverse-routing-table*
                        (fn [~'_]
                          (assoc enjure.router.core/*reverse-routing-table*

@@ -1,4 +1,7 @@
-(ns enjure.internal.resource)
+(ns enjure.internal.resource
+  (:require [enjure.router.internal.radix-tree :as tree]
+            [enjure.router.core :as router]
+            [clojure.tools.logging :as log]))
 
 (defmacro defresource
   [name method uri argsv & body]
@@ -12,8 +15,8 @@
              {:status 500})))
        (alter-var-root #'enjure.router.core/*routing-table*
                        (fn [~'_]
-                         (let [k# (enjure.router.core/->key ~uri ~method)]
-                           (assoc enjure.router.core/*routing-table*
-                                  k#
-                                  ~name))))
+                         (let [existing# (tree/search enjure.router.core/*routing-table* ~uri)]
+                           (tree/insert enjure.router.core/*routing-table*
+                                        ~uri
+                                        (merge existing# {~method ~name})))))
        #'~name))
