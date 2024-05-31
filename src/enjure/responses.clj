@@ -1,6 +1,5 @@
 (ns enjure.responses)
 
-
 (defn redirect*
   ([dest]
    (redirect* dest :found))

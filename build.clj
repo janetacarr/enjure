@@ -7,6 +7,10 @@
 (def basis (b/create-basis {:project "deps.edn"}))
 (def jar-file (format "target/%s-%s.jar" lib version))
 
+(def cli-basis (b/create-basis {:project "deps.edn"
+                                :aliases [:cli]}))
+(def uber-file (format "target/%s.jar" 'enjure-cli))
+
 (defn clean [_]
   (b/delete {:path "target"}))
 
@@ -57,3 +61,45 @@
                   :pom-file (b/pom-path {:lib lib
                                          :class-dir class-dir})})
       (println "borked"))))
+
+(def script
+  "#!/bin/sh
+java -jar /usr/local/bin/enjure-cli.jar \"$@\"")
+
+;; Create the UberJAR
+;; Write the script that calls uberJar
+;; Put script on PATH (/usr/local/bin)
+;; Make executable with chmod +x
+;; Call it to test
+(defn build-cli [_]
+  (clean nil)
+  (b/write-pom {:class-dir class-dir
+                :lib lib
+                :version version
+                :basis cli-basis
+                :src-dirs ["cli"]
+                :pom-data (pom-template version)})
+  (b/copy-dir {:src-dirs ["src" "resources" "cli"]
+               :target-dir class-dir})
+  (b/compile-clj {:basis basis
+                  :ns-compile '[enjure.core]
+                  :class-dir class-dir})
+  (b/uber {:class-dir class-dir
+           :uber-file uber-file
+           :basis basis
+           :main 'enjure.core}))
+
+
+(defn install-cli [_]
+  (let [sh (try
+             (requiring-resolve 'clojure.java.shell/sh)
+             (catch Throwable _
+               (println "couldn't resolve clojure.java.shell/sh")))]
+    (build-cli nil)
+    (sh "sudo" "cp" uber-file "/usr/local/bin/enjure-cli.jar")
+
+    (b/write-file {:path "target/enjure"
+                   :string script})
+    (sh "sudo" "cp" "target/enjure" "/usr/local/bin/enjure")
+    (sh "sudo" "chmod" "+x" "/usr/local/bin/enjure")
+    (sh "sudo" "chmod" "+x" "/usr/local/bin/enjure-cli.jar")))
