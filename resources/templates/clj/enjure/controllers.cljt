@@ -1,0 +1,23 @@
+(ns {{project-name}}.controllers.{{controller-name}}
+  (:require [enjure.controllers.core :refer [defaction
+                                             defchange
+                                             defremoval]]))
+
+(defaction create-{{controller-name}} "/{{controller-name}}"
+  [req]
+  (let [{:keys [query-params]} req]
+    ;; Call insert function from FRM
+    (println query-params)
+    {:status 200}))
+
+(defchange update-{{controller-name}} "/{{controller-name}}/:id"
+  [req]
+  ;; Call update function from FRM
+  (println req)
+  {:status 200})
+
+(defremoval delete-{{controller-name}} "/{{controller-name}}/:id"
+  [req]
+  ;; Call delete function from FRM
+  (println req)
+  {:status 200})

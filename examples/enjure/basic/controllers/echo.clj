@@ -5,8 +5,9 @@
 
 (defaction echo-create "/echo"
   [req]
-  (println req)
-  {:status 200})
+  (let [{:keys [query-params]} req]
+    (println req)
+    {:status 200}))
 
 (defchange echo-update "/echo/:id"
   [req]

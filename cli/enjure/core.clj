@@ -1,6 +1,28 @@
 (ns enjure.core
-  (:require [enjure.cmd.notes :refer [notes]])
+  (:require [clojure.edn :as edn]
+            [clojure.java.io :as io]
+            [enjure.cmd.notes :refer [notes]]
+            [enjure.cmd.new :refer [create-project]]
+            [enjure.cmd.serve :refer [serve-app]]
+            [enjure.cmd.generate :refer [generate-thing]]
+            [selmer.parser :as parser])
   (:gen-class))
+
+(def ^:dynamic *project-name* "project-name")
+
+(defn load-edn
+  "Load edn from an io/reader source (filename or io/resource)."
+  [source]
+  (try
+    (with-open [r (io/reader source)]
+      (edn/read (java.io.PushbackReader. r)))
+    (catch java.io.IOException e
+      ;;(printf "No enjure.edn file")
+      :missing-edn)
+    (catch RuntimeException e
+      (printf "Error parsing edn file '%s': %s\n" source (.getMessage e))
+      :missing-edn)))
+
 
 (def help-msg
   "
@@ -14,14 +36,24 @@ Commands:
   help - Print this message.
 ")
 
-;; NOTE: this is a test note
 (defn -main [& args]
-  (let [[cmd & params] args]
-    (case cmd
-      "notes" (notes)
-      "new" nil ;; Create new enjure app
-      "generate" nil ;; create new views/controllers/entities ?
-      "destroy" nil
-      "migrate" nil
-      "help" (println help-msg)
-      (println help-msg))))
+  (let [[cmd & params] args
+        conf (load-edn "enjure.edn")]
+    (parser/cache-off!)
+    (selmer.parser/set-resource-path! (clojure.java.io/resource "templates"))
+    (if (and (= conf :missing-edn)
+             (not (= cmd "new"))
+             (not (= cmd "help")))
+      (println (format "enjure %s must be used in enjure project directory" cmd))
+      (do (alter-var-root #'*project-name*
+                          (fn [_]
+                            (:project-name conf)))
+          (case cmd
+            "notes" (notes)
+            "new" (create-project (first params))
+            "serve" (serve-app conf)
+            "generate" (apply generate-thing conf params)
+            "destroy" nil
+            "migrate" nil
+            "help" (println help-msg)
+            (println help-msg))))))

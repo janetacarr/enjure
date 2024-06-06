@@ -1,0 +1,12 @@
+(ns {{project-name}}.pages.{{page-name}}
+  (:require [enjure.pages.core :refer [defpage]]))
+
+(defpage {{page-name}} "/{{page-name}}"
+  [req]
+  "<h1>Hello, {{page-name}}</h1>")
+
+(defpage {{page-name}} "/{{page-name}}/:{{page-name}}-id"
+  [req]
+  (let [{:keys [path-params]} req
+        {:keys [{{page-name}}-id]} path-params]
+    (format "<h1>Hello, %s</h1>" {{page-name}}-id)))
