@@ -1,0 +1,5 @@
+(ns {{project-name}}.core
+  (:require [enjure.server :as en]))
+
+(defn -main [& args]
+  (en/start-server! {:port 8080}))

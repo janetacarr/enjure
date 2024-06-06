@@ -19,4 +19,4 @@
     (format "<h1>Hello, %s</h1>" user-id)))
 
 (defn -main [& args]
-  (en/start-server! {:port 8080}))
+  (en/start-server! {:port 8080 :legacy-return-value? false}))

@@ -95,6 +95,7 @@ java -jar /usr/local/bin/enjure-cli.jar \"$@\"")
              (requiring-resolve 'clojure.java.shell/sh)
              (catch Throwable _
                (println "couldn't resolve clojure.java.shell/sh")))]
+    (install nil)
     (build-cli nil)
     (sh "sudo" "cp" uber-file "/usr/local/bin/enjure-cli.jar")
 

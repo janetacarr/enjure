@@ -14,15 +14,16 @@
 ;; TODO: Should this be here?
 (defn parse-query-string
   [query-string]
-  (->> (clojure.string/split query-string #"&")
-       (mapv #(clojure.string/split % #"="))
-       (reduce (fn [acc [name val]]
-                 (let [k (keyword name)]
-                   (if-let [existing (get acc k)]
-                     (merge acc {k (if (coll? existing)
-                                     (conj existing val)
-                                     (vector existing val))})
-                     (merge acc {k val})))) {})))
+  (when query-string
+    (some->> (clojure.string/split query-string #"&")
+             (mapv #(clojure.string/split % #"="))
+             (reduce (fn [acc [name val]]
+                       (let [k (keyword name)]
+                         (if-let [existing (get acc k)]
+                           (merge acc {k (if (coll? existing)
+                                           (conj existing val)
+                                           (vector existing val))})
+                           (merge acc {k val})))) {}))))
 
 (defn ->router
   [req]
