@@ -29,6 +29,7 @@
 Usage: enjure <command> <parameters>
 
 Commands:
+  serve - Starts the web server
   notes - Print all NOTES, FIXME, HACK, and TODO in project.
   generate - Create a new controller, page, entity, or migration.
   destory - Delete a new controller, page, entity, or migration.
