@@ -1,0 +1,6 @@
+(ns {{project-name}}.pages.{{page-name}}
+  (:require [enjure.pages.core :refer [defpage]]))
+
+(defpage {{page-name}} "/"
+  [req]
+  "<h1>Hello, enjure!</h1>")

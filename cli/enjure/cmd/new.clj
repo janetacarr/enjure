@@ -1,7 +1,8 @@
 (ns enjure.cmd.new
   (:require [clojure.string :as string]
             [clojure.java.shell :as shell]
-            [selmer.parser :as parser]))
+            [selmer.parser :as parser]
+            [enjure.cmd.generate :refer [generate-page]]))
 
 ;; TODO: this should NOT be visible to
 ;; developers.
@@ -48,7 +49,10 @@
         us-project-name (string/replace project-name #"-" "_")
         deps (update deps :aliases #(merge %
                                            {:serve {:main-opts ["-m" (str project-name ".core")]
-                                                    :exec-fn (symbol (str project-name ".core/-main"))}}))]
+                                                    :exec-fn (symbol (str project-name ".core/-main"))}}))
+        path (str "src/"
+                  us-project-name
+                  "/pages")]
     (shell/sh "mkdir" "-p" (str project-name
                                 "/src/"
                                 us-project-name))
@@ -61,4 +65,11 @@
                us-project-name
                "/core.clj")
           (parser/render-file "clj/core.cljt" conf))
+    (shell/sh "mkdir" "-p" (str project-name "/" path))
+    (spit (str project-name "/" path "/index.clj")
+          (parser/render-file "clj/enjure/index.cljt"
+                              {:page-name "index"
+                               :project-name project-name
+                               :path ""}))
+    (shell/sh "cd" "..")
     (println "Done.")))

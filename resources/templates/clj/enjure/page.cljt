@@ -1,7 +1,7 @@
 (ns {{project-name}}.pages.{{page-name}}
   (:require [enjure.pages.core :refer [defpage]]))
 
-(defpage {{page-name}} "/{{page-name}}"
+(defpage {{page-name}} "/{% if path %}{{path}}{% else %}{{page-name}}{% endif %}"
   [req]
   "<h1>Hello, {{page-name}}</h1>")
 
