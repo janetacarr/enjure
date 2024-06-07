@@ -39,10 +39,35 @@ $ enjure serve
 
 ## Structure
 
+enjure follows the typical MVC architecture:
+
+``` shell
+$ cd hello-enjure && tree
+.
+├── deps.edn
+├── enjure.edn
+└── src
+    └── hello_enjure
+        ├── controllers
+        │   └── signin.clj
+        ├── core.clj
+        └── pages
+            └── index.clj
+```
+
+(Model is missing because I haven't implemented it yet)
+
+
 ## Known Issues
 
-- The enjure cli tool is slow AF.
-- The enjure cli tool silences STDOUT (including errors).
+- No models / entities / migrations (yet).
+- No controllers request coercion for params (yet).
+- Router adds 'ghost' path params.
+- Router slow AF compared to Reitit.
+
+## Unknown Issues
+
+- Probably plenty, just haven't found them yet.
 
 ## License
 

@@ -43,6 +43,7 @@
 
 (defn create-project
   [project-name]
+  (println (format "Creating new enjure project %s..." project-name))
   (let [conf {:project-name project-name}
         us-project-name (string/replace project-name #"-" "_")
         deps (update deps :aliases #(merge %
@@ -54,8 +55,10 @@
     (spit (str project-name "/enjure.edn") conf)
     (spit (str project-name "/deps.edn") deps)
     ;; what about handling deps.edn and stuff?
+
     (spit (str project-name
                "/src/"
                us-project-name
                "/core.clj")
-          (parser/render-file "clj/core.cljt" conf))))
+          (parser/render-file "clj/core.cljt" conf))
+    (println "Done.")))

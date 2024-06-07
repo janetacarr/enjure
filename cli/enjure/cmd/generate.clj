@@ -11,6 +11,7 @@
                   us-project-name
                   "/pages")
         {:keys [out exit]} (shell/sh "mkdir" "-p" path)]
+    (println (format "Generating page %s" page-name))
     (spit (str path "/" page-name ".clj")
           (parser/render-file "clj/enjure/page.cljt"
                               {:page-name page-name
@@ -24,6 +25,7 @@
                   us-project-name
                   "/controllers")
         {:keys [out exit]} (shell/sh "mkdir" "-p" path)]
+    (println (format "Generating controllers %s" controller-name))
     (spit (str path "/" controller-name ".clj")
           (parser/render-file "clj/enjure/controllers.cljt"
                               {:controller-name controller-name

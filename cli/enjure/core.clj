@@ -5,6 +5,7 @@
             [enjure.cmd.new :refer [create-project]]
             [enjure.cmd.serve :refer [serve-app]]
             [enjure.cmd.generate :refer [generate-thing]]
+            [enjure.cmd.exit :refer [defproc]]
             [selmer.parser :as parser])
   (:gen-class))
 
@@ -37,7 +38,7 @@ Commands:
   help - Print this message.
 ")
 
-(defn -main [& args]
+(defproc -main [& args]
   (let [[cmd & params] args
         conf (load-edn "enjure.edn")]
     (parser/cache-off!)
